@@ -1,4 +1,14 @@
 #!/usr/bin/env python3
+#
+# Usage: task02.py TARGET_IP
+#
+# Executando para os seguntions hosts:
+# task02.py 143.106.7.31
+# task02.py 143.106.16.156
+# task02.py 172.16.10.130
+# task02.py 143.106.16.164
+# task02.py 143.106.23.145
+# task02.py 143.106.23.158
 import re
 import sys
 import subprocess
@@ -14,8 +24,8 @@ def find_num_routes(ttl):
     os = ""
     min_hops = 256
     for key, val in known_ttls.items():
-        hops = val - ttl
-        if hops > 0 and hops < min_hops:
+        hops = abs(val - ttl)
+        if hops < min_hops:
             min_hops = hops
             os = key
 
