@@ -1,14 +1,7 @@
 #!/usr/bin/env python3
 #
 # Usage: task02.py TARGET_IP
-#
-# Executando para os seguntions hosts:
-# task02.py 143.106.7.31
-# task02.py 143.106.16.156
-# task02.py 172.16.10.130
-# task02.py 143.106.16.164
-# task02.py 143.106.23.145
-# task02.py 143.106.23.158
+# ------------------------------------------------------------------------------
 import re
 import sys
 import subprocess
