@@ -26,6 +26,7 @@
 #
 # $ task02.py 143.106.23.158
 # Falha ao executar: ping 143.106.23.158
+# ------------------------------------------------------------------------------
 import re
 import sys
 import subprocess
