@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Usage: task05_client -h SERVER -p SERVER_PORT -q FQDN [-tcp | -udp]
+# Usage: task05_client.py -s HOST -p PORT -q QUERY [-tcp|-udp]
 #
 # Example (using TCP)
 # $ task05_client -s 127.0.0.1 -p 3000 -q ic.unicamp.br -tcp
@@ -18,6 +18,13 @@ def query_tcp(host, port, query):
     s.sendall(str.encode(query))
     data = s.recv(1024)
     s.close()
+    return data.decode()
+
+
+def query_udp(host, port, query):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.sendto(str.encode(query), (host, port))
+    data, _ = s.recvfrom(1024)
     return data.decode()
 
 
