@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+#
+# Usage: task05_server.py -p PORT [-tcp|-udp]
+#
+# Example (using TCP)
+# $ task05_server.py -p 3000 -tcp
+#
+# Example (using UDP)
+# $ task05_server.py -p 3000 -udp
+# ------------------------------------------------------------------------------
 import argparse
 import socket
 import dns.resolver as res
