@@ -4,7 +4,7 @@
 #
 # Example:
 # $ task07.py secure-ssh.log
-# LOGIN               FAILURES SUCCESS  
+# LOGIN               FAILURES SUCCESS
 # teste                   49         0
 # invalid              15218         0
 # root                  4724         0
@@ -82,7 +82,7 @@
 # $ task07.py secure-ssh.log william
 # Number of failures: 11
 # Failed IPs: ['103.84.71.58', '112.161.42.192', '218.75.121.74', '82.65.143.234', '118.89.241.214', '103.16.202.187', '138.197.171.79', '193.227.16.160', '83.234.50.32', '129.146.171.142', '109.207.69.219']
-# 
+#
 # Number of succeess: 2
 # Success IPs: ['143.106.7.154', '143.106.16.163']
 # ------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ def retrieve_ip(logentry):
 def login_has_failed(logentry):
     return "Failed password" in logentry
 
-    
+
 def login_has_succeeded(logentry):
     return "Accepted password" in logentry
 
@@ -132,7 +132,7 @@ def register_attempt(login_attempts, user, ip, has_failed):
             "succeeded_ips": []
         }
 
-    if  has_failed:
+    if has_failed:
         login_attempts[user]["failed"] += 1
         register_ip(login_attempts[user]["failed_ips"], ip)
     else:
@@ -176,7 +176,7 @@ if __name__ == "__main__":
             if user not in login_attempts:
                 print(f"Could not find login attempt for user: {user}")
                 exit(1)
-            
+
             user_ldata = login_attempts[user]
             print(f"Number of failures: {user_ldata['failed']}")
             print(f"Failed IPs: {user_ldata['failed_ips']}")
