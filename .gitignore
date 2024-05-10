@@ -4,3 +4,8 @@
 .DS_Store
 
 *.zip
+
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+id_azure
