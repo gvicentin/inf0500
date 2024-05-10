@@ -1,0 +1,39 @@
+- hosts: benchmark
+  become: yes
+
+  pre_tasks:
+    - name: Update repositories on Ubuntu
+      when: ansible_distribution == 'Ubuntu'
+      apt: 
+        update_cache: yes
+        upgrade: yes
+      changed_when: False
+
+  tasks:
+    - name: Install packages on Ubuntu
+      apt: name={{item}}
+      with_items:
+        - curl
+        - openjdk-8-jdk
+
+    - name: Create benchmark directory if it doesn't exist
+      ansible.builtin.file:
+        path: /benchmark
+        state: directory
+
+    - name: Download Geekbench
+      command: "wget -O /benchmark/Geekbench-6.2.1-Linux.tar.gz https://cdn.geekbench.com/Geekbench-6.2.1-Linux.tar.gz"
+
+    - name: Extract Geekbench tarball
+      ansible.builtin.unarchive:
+        src: /benchmark/Geekbench-6.2.1-Linux.tar.gz
+        dest: /benchmark
+        remote_src: yes
+
+    - name: Run benchmark
+      shell: /benchmark/Geekbench-6.2.1-Linux/geekbench6 > /benchmark/results.txt
+
+    - name: Fetch results
+      fetch:
+        src: /benchmark/results.txt
+        dest: results/
