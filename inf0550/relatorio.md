@@ -16,7 +16,7 @@ Todo o código e os arquivos necessários para reproduzir o laboratório aqui ap
 
 Para criar e configurar as VMs de forma automatizada, iremos utilizar o HashiCorp Terraform.
 
-Usando Infrastructure as Code (IaC), é póssivel experimentar mais e reduzir os custos, uma vez que podemos criar e remover os recursos da cloud sem intervenção manual. Além disso não precisaremos manualmente configurar e rodar os testes de benchmark.
+Usando Infrastructure as Code (IaC), é póssivel experimentar mais e reduzir os custos, uma vez que podemos criar e remover os recursos da cloud sem intervenção manual, a qualquer momento. Além disso, não precisaremos manualmente configurar e rodar os testes de benchmark.
 
 ### 2.1. Configurando a Autenticação
 
@@ -192,14 +192,10 @@ terraform plan -out main.tfplan
 terraform apply main.tfplan
 ```
 
-``sh
-terraform output
-```
-
-Para remover todos os recursos de uma única vez:
+Depois de completar a aplicação do Terraform, podemos consultar os IP públicos criados utilizando o seguinte comando:
 
 ```sh
-$ terraform destroy main.tfplan
+$ terraform output
 
 hostnames = [
   "vm-general-c1m3",
@@ -215,11 +211,18 @@ key_data = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDYFQ+lwmmurDZwRgNP1hnpUI+mlnnX
 resource_group_name = "rg-arriving-pipefish"
 ```
 
+Para remover todos os recursos de uma única vez:
+
+```sh
+terraform destroy main.tfplan
+```
+
 ## 3. Benchmarks escolhidos
 
 Neste trabalho prático optaremos por realizar benchmarks relacionados a CPU e processamento. 
 
 Todos os provedores de Cloud disponibilizam diversas famílias de instâncias para diferentes propósitos. Por exemplo, na Azure temos as seguintes famílias de VMs:
+
 1. *General purpose*
 2. *Compute optimized*
 3. *Memory optimized*
@@ -232,6 +235,7 @@ Os tamanhos de VM de propósito geral fornecem uma proporção equilibrada entre
 Os tamanhos de VM otimizados para computação têm uma alta proporção de CPU para memória. Esses tamanhos são bons para servidores web de tráfego médio, dispositivos de rede, processos em lote e servidores de aplicativos.
 
 Dentro de cada uma das famílias de VMs, temos ainda diferentes tamanhos. Por exemplo, na Azure as instâncias padrões tem a seguinte nomeclatura, onde `D<NUM_CPUS>` representa a quantidade de vCPUs:
+
 1. *Standand_D2ds_v4*
 2. *Standand_D4ds_v4*
 3. *Standand_D8ds_v4*
@@ -239,26 +243,85 @@ Dentro de cada uma das famílias de VMs, temos ainda diferentes tamanhos. Por ex
 5. *Standand_D32ds_v4*
 6. Entre outras
 
-Para isso, a ferramenta [Geekbench 6]() foi escolhida.
+A ídeia central deste projeto é realizar o benchmark entre instâncias de *General Purpose* e *Compute optimized*. Nossa hipótese é que uma instância *Compute optimized* com a mesma quantidade de núcleos desempenhe melhor que uma *General purpose*, pelo fato do processador ser mais avançado. Normalmente o custo das instâncias *Compute optimized* são maiores se comparados a *General purpose* para o mesmo número de núcleos.
+
+Para realização dos testes de benchmark, a ferramenta [Geekbench 6](https://www.geekbench.com/) foi escolhida. O Geekbench 6 mede o poder do seu processador em núcleo único e em múltiplos núcleos, utilizando cenários e conjuntos de dados práticos do dia a dia para medir o desempenho. Cada teste é baseado em tarefas encontradas em aplicativos populares do mundo real e utiliza conjuntos de dados realistas, garantindo que seus resultados sejam relevantes e aplicáveis.
 
 ## 4. Execução dos benchmarks
 
-```sh
-ansible-playbook -i inventory.ini benchmark.yml
+Para a realização dos testes de benchmark, a ferramenta ansible será utilizada. Desta forma poderemos rodar automaticamente e simultaneamente os testes em todas as máquinas ao mesmo tempo.
 
-PLAY [benchmark] ****************************************************************************************************
+O primeiro passo, é definir nosso invetário no arquivo `benchmark/inventory.ini`. Os IPs públicos foram tirados do comando `terraform output`.
 
-TASK [Gathering Facts] **********************************************************************************************
+```toml
+[benchmark]
+vm-general-c1m3 ansible_ssh_host=40.71.41.40 ansible_ssh_user=azureadmin ansible_ssh_private_key_file=id_azure
+vm-general-c2m7 ansible_ssh_host=52.170.99.228 ansible_ssh_user=azureadmin ansible_ssh_private_key_file=id_azure
+vm-compute-c2m4 ansible_ssh_host=52.224.124.159 ansible_ssh_user=azureadmin ansible_ssh_private_key_file=id_azure
+```
+
+A execução do benchmark consiste em fazer o *Download* das dependências e executar o software Geekbench. A seguir, no arquivo `benchmark/main.yml` descrevemos os comandos necessários:
+
+```yaml
+- hosts: benchmark
+  become: yes
+
+  pre_tasks:
+    - name: Update repositories on Ubuntu
+      when: ansible_distribution == 'Ubuntu'
+      apt: 
+        update_cache: yes
+        upgrade: yes
+      changed_when: False
+
+  tasks:
+    - name: Install packages on Ubuntu
+      apt: name={{item}}
+      with_items:
+        - curl
+        - openjdk-8-jdk
+
+    - name: Create benchmark directory if it doesn't exist
+      ansible.builtin.file:
+        path: /benchmark
+        state: directory
+
+    - name: Download Geekbench
+      command: "wget -O /benchmark/Geekbench-6.2.1-Linux.tar.gz https://cdn.geekbench.com/Geekbench-6.2.1-Linux.tar.gz"
+
+    - name: Extract Geekbench tarball
+      ansible.builtin.unarchive:
+        src: /benchmark/Geekbench-6.2.1-Linux.tar.gz
+        dest: /benchmark
+        remote_src: yes
+
+    - name: Run benchmark
+      shell: /benchmark/Geekbench-6.2.1-Linux/geekbench6 > /benchmark/results.txt
+
+    - name: Fetch results
+      fetch:
+        src: /benchmark/results.txt
+        dest: results/
+```
+
+Podemos rodar o Ansible Playbook com o comando a seguir. Após finalizado, teremos todos os resultados dos testes na nossa máquina.
+
+```
+$ ansible-playbook -i inventory.ini benchmark.yml
+
+PLAY [benchmark] **************************************************************
+
+TASK [Gathering Facts] ********************************************************
 ok: [vm-compute-c2m4]
 ok: [vm-general-c2m7]
 ok: [vm-general-c1m3]
 
-TASK [Update repositories on Ubuntu] ********************************************************************************
+TASK [Update repositories on Ubuntu] ******************************************
 ok: [vm-compute-c2m4]
 ok: [vm-general-c2m7]
 ok: [vm-general-c1m3]
 
-TASK [Install packages on Ubuntu] ***********************************************************************************
+TASK [Install packages on Ubuntu] *********************************************
 ok: [vm-general-c2m7] => (item=curl)
 ok: [vm-compute-c2m4] => (item=curl)
 ok: [vm-general-c1m3] => (item=curl)
@@ -266,37 +329,143 @@ changed: [vm-general-c1m3] => (item=openjdk-8-jdk)
 changed: [vm-general-c2m7] => (item=openjdk-8-jdk)
 changed: [vm-compute-c2m4] => (item=openjdk-8-jdk)
 
-TASK [Create benchmark directory if it doesn't exist] ***************************************************************
+TASK [Create benchmark directory if it doesn't exist] *************************
 changed: [vm-compute-c2m4]
 changed: [vm-general-c2m7]
 changed: [vm-general-c1m3]
 
-TASK [Download Geekbench] *******************************************************************************************
+TASK [Download Geekbench] *****************************************************
 changed: [vm-general-c1m3]
 changed: [vm-general-c2m7]
 changed: [vm-compute-c2m4]
 
-TASK [Extract Geekbench tarball] ************************************************************************************
+TASK [Extract Geekbench tarball] **********************************************
 changed: [vm-compute-c2m4]
 changed: [vm-general-c2m7]
 changed: [vm-general-c1m3]
 
-TASK [Run benchmark] ************************************************************************************************
+TASK [Run benchmark] **********************************************************
 changed: [vm-general-c2m7]
 changed: [vm-compute-c2m4]
 changed: [vm-general-c1m3]
 
-TASK [Fetch results] ************************************************************************************************
+TASK [Fetch results] **********************************************************
 changed: [vm-general-c1m3]
 changed: [vm-compute-c2m4]
 changed: [vm-general-c2m7]
 
-PLAY RECAP **********************************************************************************************************
-vm-compute-c2m4            : ok=8    changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
-vm-general-c1m3            : ok=8    changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
-vm-general-c2m7            : ok=8    changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+PLAY RECAP ********************************************************************
+vm-compute-c2m4            : ok=8    changed=6    unreachable=0    failed=0    
+vm-general-c1m3            : ok=8    changed=6    unreachable=0    failed=0    
+vm-general-c2m7            : ok=8    changed=6    unreachable=0    failed=0   
 ```
 
 ## 5. Resultados e discussão
 
+### 5.1. General purpose 1 núcleos
+
+Especificação de CPU e memória encontrados pelo Geekbench.
+
+| System Information        |                             |
+|---------------------------|-----------------------------|
+| Operating System          | Ubuntu 22.04.4 LTS         |
+| Model                     | Microsoft Corporation Virtual Machine |
+| Motherboard               | Microsoft Corporation Virtual Machine |
+
+| CPU Information           |                             |
+|---------------------------|-----------------------------|
+| Name                      | Intel(R) Xeon(R) Platinum 8272CL CPU @ 2.60GHz |
+| Topology                  | 1 Processor, 1 Core        |
+| Identifier                | GenuineIntel Family 6 Model 85 Stepping 7 |
+| Base Frequency            | 2.59 GHz                   |
+| Cluster 1                 | 0 Cores                    |
+| L1 Instruction Cache      | 32.0 KB x 1                |
+| L1 Data Cache             | 32.0 KB x 1                |
+| L2 Cache                  | 1.00 MB x 1                |
+| L3 Cache                  | 35.8 MB x 1                |
+
+| Memory Information        |                             |
+|---------------------------|-----------------------------|
+| Size                      | 3.32 GB                     |
+
+### 5.2. General purpose 2 núcleos
+
+Especificação de CPU e memória encontrados pelo Geekbench.
+
+| System Information        |                             |
+|---------------------------|-----------------------------|
+| Operating System          | Ubuntu 22.04.4 LTS         |
+| Model                     | Microsoft Corporation Virtual Machine |
+| Motherboard               | Microsoft Corporation Virtual Machine |
+
+| CPU Information           |                             |
+|---------------------------|-----------------------------|
+| Name                      | Intel(R) Xeon(R) Platinum 8272CL CPU @ 2.60GHz |
+| Topology                  | 1 Processor, 2 Cores       |
+| Identifier                | GenuineIntel Family 6 Model 85 Stepping 7 |
+| Base Frequency            | 2.59 GHz                   |
+| Cluster 1                 | 0 Cores                    |
+| L1 Instruction Cache      | 32.0 KB x 2                |
+| L1 Data Cache             | 32.0 KB x 2                |
+| L2 Cache                  | 1.00 MB x 2                |
+| L3 Cache                  | 35.8 MB x 1                |
+
+| Memory Information        |                             |
+|---------------------------|-----------------------------|
+| Size                      | 6.76 GB                     |
+
+### 5.3. Compute optimized 2 núcleos
+
+Especificação de CPU e memória encontrados pelo Geekbench.
+
+| System Information        |                             |
+|---------------------------|-----------------------------|
+| Operating System          | Ubuntu 22.04.4 LTS         |
+| Model                     | Microsoft Corporation Virtual Machine |
+| Motherboard               | Microsoft Corporation Virtual Machine |
+
+| CPU Information           |                             |
+|---------------------------|-----------------------------|
+| Name                      | Intel(R) Xeon(R) Platinum 8272CL CPU @ 2.60GHz |
+| Topology                  | 1 Processor, 1 Core, 2 Threads |
+| Identifier                | GenuineIntel Family 6 Model 85 Stepping 7 |
+| Base Frequency            | 2.59 GHz                   |
+| Cluster 1                 | 0 Cores                    |
+| L1 Instruction Cache      | 32.0 KB x 1                |
+| L1 Data Cache             | 32.0 KB x 1                |
+| L2 Cache                  | 1.00 MB x 1                |
+| L3 Cache                  | 35.8 MB x 1                |
+
+| Memory Information        |                             |
+|---------------------------|-----------------------------|
+| Size                      | 3.81 GB                     |
+
+### 5.4. Score finais
+
+Comparação dos resultados obtidos no benchmark:
+
+| Resultado Final        |                             |
+|------------------------|-----------------------------|
+| [General Purpose 1 core] Single-Core Score      | 989                         |
+| [General Purpose 1 core] Multi-Core Score       | 985                         |
+| [General Purpose 2 core] Single-Core Score      | 1088                         |
+| [General Purpose 2 core] Multi-Core Score       | 2009                         |
+| [Compute optimized 2 core] Single-Core Score      | 1142                         |
+| [Compute optimized 2 core] Multi-Core Score       | 1374                         |
+
+Para consultar todos os resultados online, use os links a seguir:
+
+* [General Purpose 1 core](https://browser.geekbench.com/v6/cpu/6046933): https://browser.geekbench.com/v6/cpu/6046933
+* [General Purpose 2 core](https://browser.geekbench.com/v6/cpu/6046914): https://browser.geekbench.com/v6/cpu/6046914
+* [Compute Optimized 2 core](https://browser.geekbench.com/v6/cpu/6046925): https://browser.geekbench.com/v6/cpu/6046925
+
 ## 6. Conclusão
+
+Após realizar benchmarks em três instâncias de máquinas virtuais (VMs) da Azure, comparando as famílias General Purpose e Compute Optimized, podemos concluir que embora a performance da família Compute Optimized seja superior quando comparada apenas em termos de um único núcleo com a família General Purpose, outros fatores devem ser considerados ao analisar o desempenho em cenários de múltiplos núcleos.
+
+Observamos que, apesar da vantagem em termos de poder de processamento individual, a Compute Optimized mostrou-se menos eficiente em ambientes que exigem um equilíbrio entre CPU e memória. Isso se traduziu em resultados inferiores nos testes que envolviam o uso de múltiplos núcleos, onde a capacidade de memória disponível desempenha um papel crucial.
+
+Essa descoberta ressalta a importância de uma análise holística ao selecionar a configuração de instância de VM mais adequada para uma carga de trabalho específica. Embora o desempenho em um único núcleo possa ser um fator decisivo em certos casos, a otimização do equilíbrio entre CPU e memória pode ser crucial em cenários que exigem processamento paralelo ou multitarefa intensiva.
+
+Portanto, ao considerar a escolha entre as famílias General Purpose e Compute Optimized, é fundamental avaliar não apenas a performance em cenários isolados, mas também as necessidades específicas da carga de trabalho e como cada configuração atende a esses requisitos de maneira abrangente. Esta abordagem permitirá uma seleção mais precisa e eficiente da instância de VM, resultando em melhor desempenho e utilização dos recursos disponíveis.
+
