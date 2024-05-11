@@ -192,10 +192,27 @@ terraform plan -out main.tfplan
 terraform apply main.tfplan
 ```
 
+``sh
+terraform output
+```
+
 Para remover todos os recursos de uma única vez:
 
 ```sh
-terraform destroy main.tfplan
+$ terraform destroy main.tfplan
+
+hostnames = [
+  "vm-general-c1m3",
+  "vm-general-c2m7",
+  "vm-compute-c2m4",
+]
+public_ip_addresses = [
+  "40.71.41.40",
+  "52.170.99.228",
+  "52.224.124.159",
+]
+key_data = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDYFQ+lwmmurDZwRgNP1hnpUI+mlnnXuq+28lk04liemKPi5gzbxE8rlHQpTOEov2WhiJ5pESEjRXjhBbZDRS4YivenFnzhqw/HgjIDAMrgOEAGfsJ+RD3BChJ9EGccrL0hNMiq3aLaTH/LRwrYzr0O3rDQ2kD9Gg/YHYHlXIvzlcamIG9D5f23ZeWxtvIQwealKAObA27yDgeLNwe70sERYd64SIke2kbrdbWGZM2OeWLvvl9QzPpJod/X4Z92v0NjlQ592mY66R9mKh3ODITLgd2r7+wnzu8Ph4hhpODZLyn3Z1P9V3U9rM/EAK81VowrCdFl1/d3z2MrywA0mpymi38KeAn0mp2w/3TLJejDKRLytBlsDbAruxuZ5poaJH1ztG0cnZyABhkreCmV/ILcEZe7f1CwpGr8V9BUYXnjNjqS3SiyO9VjHNt4TLgDB2Q6K+7im4chef+46n5KZVuiCx14ZLdtNSbBK220chnNybXgd8eG7vFBKXTdCX24g30= generated-by-azure"
+resource_group_name = "rg-arriving-pipefish"
 ```
 
 ## 3. Benchmarks escolhidos
@@ -228,6 +245,56 @@ Para isso, a ferramenta [Geekbench 6]() foi escolhida.
 
 ```sh
 ansible-playbook -i inventory.ini benchmark.yml
+
+PLAY [benchmark] ****************************************************************************************************
+
+TASK [Gathering Facts] **********************************************************************************************
+ok: [vm-compute-c2m4]
+ok: [vm-general-c2m7]
+ok: [vm-general-c1m3]
+
+TASK [Update repositories on Ubuntu] ********************************************************************************
+ok: [vm-compute-c2m4]
+ok: [vm-general-c2m7]
+ok: [vm-general-c1m3]
+
+TASK [Install packages on Ubuntu] ***********************************************************************************
+ok: [vm-general-c2m7] => (item=curl)
+ok: [vm-compute-c2m4] => (item=curl)
+ok: [vm-general-c1m3] => (item=curl)
+changed: [vm-general-c1m3] => (item=openjdk-8-jdk)
+changed: [vm-general-c2m7] => (item=openjdk-8-jdk)
+changed: [vm-compute-c2m4] => (item=openjdk-8-jdk)
+
+TASK [Create benchmark directory if it doesn't exist] ***************************************************************
+changed: [vm-compute-c2m4]
+changed: [vm-general-c2m7]
+changed: [vm-general-c1m3]
+
+TASK [Download Geekbench] *******************************************************************************************
+changed: [vm-general-c1m3]
+changed: [vm-general-c2m7]
+changed: [vm-compute-c2m4]
+
+TASK [Extract Geekbench tarball] ************************************************************************************
+changed: [vm-compute-c2m4]
+changed: [vm-general-c2m7]
+changed: [vm-general-c1m3]
+
+TASK [Run benchmark] ************************************************************************************************
+changed: [vm-general-c2m7]
+changed: [vm-compute-c2m4]
+changed: [vm-general-c1m3]
+
+TASK [Fetch results] ************************************************************************************************
+changed: [vm-general-c1m3]
+changed: [vm-compute-c2m4]
+changed: [vm-general-c2m7]
+
+PLAY RECAP **********************************************************************************************************
+vm-compute-c2m4            : ok=8    changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+vm-general-c1m3            : ok=8    changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+vm-general-c2m7            : ok=8    changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
 
 ## 5. Resultados e discussão

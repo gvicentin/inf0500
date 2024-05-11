@@ -6,6 +6,10 @@ output "key_data" {
   value = azapi_resource_action.ssh_public_key_gen.output.publicKey
 }
 
-output "public_ip_address" {
-  value = azurerm_linux_virtual_machine.my_terraform_vm.public_ip_address
+output "hostnames" {
+  value = azurerm_linux_virtual_machine.terraform_vms[*].name
+}
+
+output "public_ip_addresses" {
+  value = azurerm_linux_virtual_machine.terraform_vms[*].public_ip_address
 }

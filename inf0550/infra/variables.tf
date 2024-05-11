@@ -15,3 +15,15 @@ variable "username" {
   description = "The username for the local account that will be created on the new VM."
   default     = "azureadmin"
 }
+
+variable "instance_names" {
+  type        = list(string)
+  description = "List of instance names"
+  default     = []
+}
+
+variable "instance_sizes" {
+  type        = list(string)
+  description = "List of instance sizes"
+  default     = []
+}

@@ -1,0 +1,82 @@
+Geekbench 6.2.1 : https://www.geekbench.com/
+
+Geekbench 6 requires an active internet connection and automatically uploads 
+benchmark results to the Geekbench Browser.
+
+Upgrade to Geekbench 6 Pro to enable offline use and unlock other features:
+
+  https://store.primatelabs.com/v6
+
+Enter your Geekbench 6 Pro license using the following command line:
+
+  /benchmark/Geekbench-6.2.1-Linux/geekbench6 --unlock <email> <key>
+
+System Information
+  Operating System              Ubuntu 22.04.4 LTS
+  Kernel                        Linux 6.5.0-1019-azure x86_64
+  Model                         Microsoft Corporation Virtual Machine
+  Motherboard                   Microsoft Corporation Virtual Machine
+  BIOS                          Microsoft Corporation Hyper-V UEFI Release v4.1
+
+CPU Information
+  Name                          Intel(R) Xeon(R) Platinum 8272CL CPU @ 2.60GHz
+  Topology                      1 Processor, 2 Cores
+  Identifier                    GenuineIntel Family 6 Model 85 Stepping 7
+  Base Frequency                2.59 GHz
+  L1 Instruction Cache          32.0 KB x 2
+  L1 Data Cache                 32.0 KB x 2
+  L2 Cache                      1.00 MB x 2
+  L3 Cache                      35.8 MB
+
+Memory Information
+  Size                          6.76 GB
+
+
+Single-Core
+  Running File Compression
+  Running Navigation
+  Running HTML5 Browser
+  Running PDF Renderer
+  Running Photo Library
+  Running Clang
+  Running Text Processing
+  Running Asset Compression
+  Running Object Detection
+  Running Background Blur
+  Running Horizon Detection
+  Running Object Remover
+  Running HDR
+  Running Photo Filter
+  Running Ray Tracer
+  Running Structure from Motion
+
+Multi-Core
+  Running File Compression
+  Running Navigation
+  Running HTML5 Browser
+  Running PDF Renderer
+  Running Photo Library
+  Running Clang
+  Running Text Processing
+  Running Asset Compression
+  Running Object Detection
+  Running Background Blur
+  Running Horizon Detection
+  Running Object Remover
+  Running HDR
+  Running Photo Filter
+  Running Ray Tracer
+  Running Structure from Motion
+
+
+Uploading results to the Geekbench Browser. This could take a minute or two 
+depending on the speed of your internet connection.
+
+Upload succeeded. Visit the following link and view your results online:
+
+  https://browser.geekbench.com/v6/cpu/6046914
+
+Visit the following link and add this result to your profile:
+
+  https://browser.geekbench.com/v6/cpu/6046914/claim?key=206243
+
