@@ -10,3 +10,5 @@ terraform.tfstate
 terraform.tfstate.backup
 id_azure
 inventory.ini
+
+inf0534/captures
