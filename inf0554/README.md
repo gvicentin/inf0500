@@ -10,6 +10,8 @@ Um Bastion host foi utilizado para acessar as máquinas virtuais. O Bastion host
 
 Além disto, tivemos que configurar um NAT Gateway com IP público para permitir que as máquinas virtuais acessem a internet. O NAT Gateway é um serviço que permite que as máquinas virtuais em uma rede privada acessem a internet. O NAT Gateway é um serviço que permite que as máquinas virtuais em uma rede privada acessem a internet. O NAT Gateway é um serviço que permite que as máquinas virtuais em uma rede privada acessem a internet. O NAT Gateway é um serviço que permite que as máquinas virtuais em uma rede privada acessem a internet. O NAT Gateway é um serviço que permite que as máquinas virtuais em uma rede privada acessem a internet. O NAT Gateway é um serviço que permite que as máquinas virtuais em uma rede privada acessem a internet. O NAT Gateway é um serviço que permite que as máquinas virtuais em uma rede privada acessem a internet. O NAT Gateway é um serviço que permite que as máquinas virtuais em uma rede privada acessem a internet. O NAT Gateway é um serviço que permite que as máquinas virtuais em uma rede privada acessem a internet. O NAT Gateway é um serviço que permite que as máquinas virtuais em uma rede privada acessem a internet. O NAT Gateway é um serviço que permite que as máquinas virtuais em uma rede privada acessem a internet e façam o download da aplicação direto do GitHub.
 
+![Arquitetura](assets/cloud-infra.png)
+
 ## Applicação Demo
 
 A aplicação demo é um site simples que exibe uma página HTML. A aplicação é executada em um servidor web Apache. O servidor web Apache é um servidor web de código aberto que é amplamente utilizado para hospedar sites e aplicativos web. O servidor web Apache é executado em um servidor virtual que é gerenciado por um conjunto de escalas.
@@ -37,6 +39,10 @@ E então, aplicamos o plano:
 ```
 terraform apply
 ```
+
+Grafo de recursos:
+
+![Grafo de Recursos](assets/graph.png)
 
 ## AutoScaling
 
@@ -90,6 +96,12 @@ Essas duas regras instruem o conjunto de escalas a adicionar uma VM quando a car
 ## Limitações
 
 a) O Azure Monitor não suporta a definição de regras de autoescala com base em métricas personalizadas. Isso significa que você não pode definir regras de autoescala com base em métricas que não são fornecidas pelo Azure Monitor.
+b) AutoScaling apenas por métricas de CPU ou memória.
+
+Alternativas:
+
+a) Usar o Azure Functions para criar uma função que monitora a métrica personalizada e, em seguida, chama a API de gerenciamento do Azure para aumentar ou diminuir a quantidade de instâncias da aplicação.
+b) KEDA (Kubernetes-based Event-Driven Autoscaling) é uma solução de autoescala baseada em Kubernetes que permite escalar automaticamente aplicativos baseados em Kubernetes com base em eventos.
 
 ## Limpar a Infraestrutura
 
